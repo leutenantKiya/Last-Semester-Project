@@ -5,23 +5,74 @@ import re
 import img2pdf
 from bs4 import BeautifulSoup
 from scrape import getComicList
+from scrape import scrape_img
 import requests
 import pandas as pd
 from gemini import geminiSearch
 
+class ChapterStack:
+    def __init__(self): 
+        self.items = [] 
+    def push(self, item): 
+        self.items.append(item)
+    def pop(self): 
+        return self.items.pop() if self.items else None
+    def peek(self, default=None): 
+        return self.items[-1] if self.items else default
+    def size(self): 
+        return len(self.items)
+
+def display_reader_mode():
+    with st.sidebar:
+        st.header(f"📖 Membaca: {st.session_state['current_chapter_title']}")
+        
+        if st.button("⬅️ Kembali ke Daftar Chapter"):
+            st.session_state.is_reading = False
+            st.session_state.chapter_images = [] 
+            st.rerun() 
+            
+        st.markdown("---")
+    
+    if not st.session_state.chapter_images:
+        st.error("Gagal menampilkan konten. Daftar gambar kosong.")
+    else:
+        st.info(f"Memuat {len(st.session_state.chapter_images)} halaman.")
+        
+        for i, url in enumerate(st.session_state.chapter_images):
+            st.image(url, caption=f"Halaman {i+1}", use_column_width=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("⬅️ Kembali ke Daftar Chapter (Bawah)"):
+        st.session_state.is_reading = False
+        st.session_state.chapter_images = [] 
+        st.rerun()
+        
 def getChapters(manga):
     st.subheader(manga["title"])
+    
     with st.sidebar:
         st.image(manga["image"], width=150)
         st.markdown(f"**{manga['title']}**")
-        if st.button("⬅️ Kembali ke Daftar Komik", use_container_width=True, type="primary"):
-                st.session_state.selected_manga = None
-                st.session_state.chapters_limit = 10  # reset limit
+        st.markdown("---")
+        
+        st.subheader("📖 Chapter Manager (Stack LIFO)")
+        last_read = st.session_state['read_history'].peek() 
+        st.caption(f"Terakhir Dibaca (PEEK): **{last_read if last_read else 'Belum Ada'}**")
+        st.info(f"Riwayat Bacaan (Stack Size): {st.session_state['read_history'].size()}")
+
+        if st.session_state['read_history'].size() > 0:
+             if st.button("⬅️ Kembali ke Sebelumnya (POP)", key="btn_pop", use_container_width=True):
+                st.session_state['read_history'].pop()
+                st.warning("Chapter dihapus dari riwayat (POP).")
                 st.rerun()
                 
-    if "chapters_limit" not in st.session_state:
-        st.session_state.chapters_limit = 10
-
+        st.markdown("---")
+        if st.button("⬅️ Kembali ke Daftar Komik", use_container_width=True, type="primary"):
+            st.session_state.selected_manga = None
+            st.session_state.chapters_limit = 10 
+            st.session_state['read_history'] = ChapterStack()
+            st.rerun()
+        
     try:
         resp = requests.get(manga["link"], headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
         if resp.status_code != 200:
@@ -29,17 +80,15 @@ def getChapters(manga):
             return
 
         soup = BeautifulSoup(resp.text, "html.parser")
-
         desc_elem = soup.select_one("div.summary__content")
         description = desc_elem.get_text(strip=True) if desc_elem else "Deskripsi tidak ditemukan."
-
         chapters = []
         for ch in soup.select("ul.main.version-chap li.wp-manga-chapter"):
             ch_title = ch.select_one("a").get_text(strip=True)
             ch_link = ch.select_one("a")["href"]
             ch_date = ch.select_one("span.chapter-release-date i")
             ch_date = ch_date.get_text(strip=True) if ch_date else ""
-            chapters.append({"title": ch_title, "link": ch_link, "date": ch_date})
+            chapters.append({"title": ch_title, "link": ch_link, "date": ch_date}) 
 
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -56,16 +105,34 @@ def getChapters(manga):
             st.warning("Belum ada chapter yang ditemukan.")
         else:
             visible_chapters = chapters[:st.session_state.chapters_limit]
-            cols = st.columns(5)
+            
             for i, ch in enumerate(visible_chapters):
-                with cols[i % 5]:
+                col_title, col_read, col_push = st.columns([3, 1.5, 1.5])
+                
+                with col_title:
                     st.markdown(
-                        f"<p style='margin-bottom:4px;'>"
-                        f"📖 <a href='{ch['link']}' target='_blank'>{ch['title']}</a><br>"
-                        f"<span style='color:gray; font-size:0.8em;'>{ch['date']}</span>"
-                        f"</p>",
+                        f"**{ch['title']}** <span style='color:gray; font-size:0.8em;'> ({ch['date']})</span>", 
                         unsafe_allow_html=True
                     )
+                    
+                with col_read:
+                    if st.button("▶️ Baca", key=f"btn_read_{ch['link']}", use_container_width=True):
+                        image_urls = scrape_img(ch)
+                        
+                        if image_urls:
+                            st.session_state.chapter_images = image_urls
+                            st.session_state.current_chapter_title = ch['title']
+                            st.session_state.is_reading = True
+                            st.rerun() 
+                        else:
+                            st.error("Gagal memuat gambar chapter.")
+
+                with col_push:
+                    if st.button("✅ PUSH (Riwayat)", key=f"btn_push_{ch['link']}", use_container_width=True):
+                        st.session_state['read_history'].push(ch['title'])
+                        st.success("Ditambahkan ke riwayat (PUSH)!")
+                        st.rerun() 
+
             if st.session_state.chapters_limit < len(chapters):
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("⬇️ Tampilkan Lebih Banyak Chapter", use_container_width=True):
@@ -76,6 +143,7 @@ def getChapters(manga):
 
     except Exception as e:
         st.error(f"Terjadi kesalahan saat scraping detail: {e}")
+        
 def download_images(image_urls, manga_slug, ch_link, base_dir, st_status):
     pass
 def convertPDF(mangaDirectory, st_status):
@@ -131,7 +199,8 @@ def display_manga_grid():
                                 f"</p>", 
                                 unsafe_allow_html=True
                             )
-                            if st.button("Pilih Manga Ini", key=manga['slug'], use_container_width=True):
+                            print(current_filter)
+                            if st.button(f"Pilih {current_filter} Ini" if current_filter != None else "Pilih komik Ini", key=manga['slug'], use_container_width=True):
                                 st.session_state.selected_manga = manga
                                 st.rerun() 
             else:
@@ -179,7 +248,20 @@ def main():
     if 'search_active' not in st.session_state:
         st.session_state.search_active = False 
         
-    if st.session_state.selected_manga:
+    if 'is_reading' not in st.session_state: 
+        st.session_state.is_reading = False
+    if 'chapter_images' not in st.session_state: 
+        st.session_state.chapter_images = []
+    if 'current_chapter_title' not in st.session_state: 
+        st.session_state.current_chapter_title = ""
+    if 'chapters_limit' not in st.session_state: 
+        st.session_state.chapters_limit = 10
+    if 'read_history' not in st.session_state: 
+        st.session_state['read_history'] = ChapterStack() 
+        
+    if st.session_state.is_reading:
+        display_reader_mode() 
+    elif st.session_state.selected_manga:
         getChapters(st.session_state.selected_manga)
     else:
         display_manga_grid()

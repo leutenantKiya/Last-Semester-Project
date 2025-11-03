@@ -61,5 +61,25 @@ def getComicList(filter=None, page=1, order= None):
         st.error(f"Terjadi kesalahan saat mengambil data: {e}")
         return []
 
-def scrape_img(link, status):
-    pass
+def scrape_img(link, status = True):
+    ch_link = link["link"]
+    
+    try:
+        resp = requests.get(ch_link, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+        resp.raise_for_status()
+        
+        soup = BeautifulSoup(resp.text, "html.parser")
+        image_urls = []
+        reading_content = soup.select_one('div.reading-content')
+        
+        if reading_content:
+            img_tags = reading_content.find_all('img')
+            for img in img_tags:
+                url = img.get('data-src') or img.get('data-lazy-src') or img.get('src')
+                if url and url.strip():
+                    image_urls.append(url.strip())
+        
+        return image_urls
+    except Exception as e:
+        st.error(f"❌ Error saat scraping konten chapter: {e}")
+        return []
