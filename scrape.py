@@ -5,11 +5,12 @@ BASE_API = 'https://www.mangaread.org/'
 
 def getComicList(filter=None, page=1, order= None):
     try:
-        if filter:
+        if filter is not None:
             base_url = f"{BASE_API}genres/{filter}/"
         else:
             base_url = f"{BASE_API}"
         
+        print(filter)
         if page == 1:
             url = base_url
         else:
@@ -18,11 +19,11 @@ def getComicList(filter=None, page=1, order= None):
         if order and filter:
             url = f"{url}?m_orderby={order}"    
         else:
-            url = f"{url}?m_orderby={'latest'}"
+            url = f"{url}"
 
         st.write(f"Mengambil data dari: {url}") # Debugging URL
         
-        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
         
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, "html.parser")
@@ -74,6 +75,7 @@ def scrape_img(link, status = True):
         
         if reading_content:
             img_tags = reading_content.find_all('img')
+            print(img_tags)
             for img in img_tags:
                 url = img.get('data-src') or img.get('data-lazy-src') or img.get('src')
                 if url and url.strip():

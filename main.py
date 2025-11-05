@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-import time
 import re
 import img2pdf
 from bs4 import BeautifulSoup
@@ -9,18 +8,8 @@ from scrape import scrape_img
 import requests
 import pandas as pd
 from gemini import geminiSearch
-
-class ChapterStack:
-    def __init__(self): 
-        self.items = [] 
-    def push(self, item): 
-        self.items.append(item)
-    def pop(self): 
-        return self.items.pop() if self.items else None
-    def peek(self, default=None): 
-        return self.items[-1] if self.items else default
-    def size(self): 
-        return len(self.items)
+import chapterStack
+import chapterLinkedList as LL
 
 def display_reader_mode():
     with st.sidebar:
@@ -39,7 +28,11 @@ def display_reader_mode():
         st.info(f"Memuat {len(st.session_state.chapter_images)} halaman.")
         
         for i, url in enumerate(st.session_state.chapter_images):
-            st.image(url, caption=f"Halaman {i+1}", use_column_width=True)
+            img = url
+            st.image(url, caption=f"Halaman {i+1}")
+    col1, col2 = st.columns([1, 2])
+    # di sini nanti buat next sama prev chapter malas
+        
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("⬅️ Kembali ke Daftar Chapter (Bawah)"):
@@ -58,9 +51,9 @@ def getChapters(manga):
         st.subheader("📖 Chapter Manager (Stack LIFO)")
         last_read = st.session_state['read_history'].peek() 
         st.caption(f"Terakhir Dibaca (PEEK): **{last_read if last_read else 'Belum Ada'}**")
-        st.info(f"Riwayat Bacaan (Stack Size): {st.session_state['read_history'].size()}")
+        st.info(f"Riwayat Bacaan (Stack Size): {st.session_state['read_history'].sizeStack()}")
 
-        if st.session_state['read_history'].size() > 0:
+        if st.session_state['read_history'].sizeStack() > 0:
              if st.button("⬅️ Kembali ke Sebelumnya (POP)", key="btn_pop", use_container_width=True):
                 st.session_state['read_history'].pop()
                 st.warning("Chapter dihapus dari riwayat (POP).")
@@ -70,7 +63,7 @@ def getChapters(manga):
         if st.button("⬅️ Kembali ke Daftar Komik", use_container_width=True, type="primary"):
             st.session_state.selected_manga = None
             st.session_state.chapters_limit = 10 
-            st.session_state['read_history'] = ChapterStack()
+            st.session_state['read_history'] = chapterStack.stack()
             st.rerun()
         
     try:
@@ -136,7 +129,7 @@ def getChapters(manga):
             if st.session_state.chapters_limit < len(chapters):
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("⬇️ Tampilkan Lebih Banyak Chapter", use_container_width=True):
-                    st.session_state.chapters_limit += 10
+                    st.session_state.chapters_limit += len(chapters) - st.session_state.chapters_limit
                     st.rerun()
             else:
                 st.info("✅ Semua chapter sudah ditampilkan.")
@@ -166,12 +159,18 @@ def display_manga_grid():
                         ["latest", "alphabet", "rating", "trending", "views", "new-manga"],
                         key="selected_order"
                 )
-    if st.sidebar.button("📥 Ambil Daftar Komik", type="primary"):
+    if 'has_fetched_once' not in st.session_state:
+        st.session_state.has_fetched_once = False
+
+    manual_fetch = st.sidebar.button("📥 Ambil Daftar Komik", type="primary")
+    
+    if not st.session_state.has_fetched_once or manual_fetch:
         st.session_state.current_page = 1 
         st.session_state.current_filter = None if filter_type == "Semua" else filter_type
-        if st.session_state.current_filter != None:
-                st.session_state.order_by = None if order_type == "latest" else order_type
+        if st.session_state.current_filter is not None:
+            st.session_state.order_by = None if order_type == "latest" else order_type
         st.session_state.search_active = True
+        st.session_state.has_fetched_once = True
         st.rerun()
 
     if st.session_state.search_active:
@@ -257,7 +256,7 @@ def main():
     if 'chapters_limit' not in st.session_state: 
         st.session_state.chapters_limit = 10
     if 'read_history' not in st.session_state: 
-        st.session_state['read_history'] = ChapterStack() 
+        st.session_state['read_history'] = chapterStack.stack()
         
     if st.session_state.is_reading:
         display_reader_mode() 
