@@ -82,7 +82,6 @@ def getChapters(manga):
             ch_date = ch.select_one("span.chapter-release-date i")
             ch_date = ch_date.get_text(strip=True) if ch_date else ""
             chapters.append({"title": ch_title, "link": ch_link, "date": ch_date}) 
-
         col1, col2 = st.columns([1, 2])
         with col1:
             st.image(manga["image"], width=300)
@@ -116,6 +115,7 @@ def getChapters(manga):
                             st.session_state.chapter_images = image_urls
                             st.session_state.current_chapter_title = ch['title']
                             st.session_state.is_reading = True
+                            print(st.session_state.current_chapter_title)
                             st.rerun() 
                         else:
                             st.error("Gagal memuat gambar chapter.")
@@ -234,7 +234,8 @@ def display_downloader_ui():
 
 def main():
     st.set_page_config(page_title="Duta Comic", layout="wide")
-    st.title("📚 Duta Comic Reader & Downloader")
+    st.markdown("<h1 style='text-align: center; color: red;'>📚 Duta Comic Reader & Downloader</h1>", unsafe_allow_html=True)
+    # st.title("📚 Duta Comic Reader & Downloader", )
 
     if 'selected_manga' not in st.session_state:
         st.session_state.selected_manga = None
