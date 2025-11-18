@@ -11,6 +11,13 @@ import pandas as pd
 from gemini import geminiSearch
 import chapterStack
 import chapterLinkedList as LL
+from login import display_login_page
+
+
+if 'username' not in st.session_state:
+    display_login_page()
+
+st.set_page_config(page_title='Duta Comic', layout="centered")
 
 def display_reader_mode():
     with st.sidebar:
@@ -150,6 +157,11 @@ def display_manga_grid():
     current_filter = st.session_state.current_filter
     order_by = st.session_state.order_by
     
+    if st.sidebar.button("Logout", type="primary"):
+        st.session_state['logged_in'] = False
+        display_login_page()
+        st.rerun()
+    
     search = st.sidebar.text_input("Pencarian dan Gemini", placeholder="e.g: Beri Aku rekomendasi, deskripsi komik")
     
     if search:
@@ -246,7 +258,7 @@ def main():
     st.set_page_config(page_title="Duta Comic", layout="wide")
     st.markdown("<h1 style='text-align: center; color: red;'>📚 Duta Comic Reader & Downloader</h1>", unsafe_allow_html=True)
     # st.title("📚 Duta Comic Reader & Downloader", )
-
+    st.markdown(f"<h2>Hi, {st.session_state['username']}</h2>", unsafe_allow_html=True)
     if 'selected_manga' not in st.session_state:
         st.session_state.selected_manga = None
     if 'current_page' not in st.session_state:
