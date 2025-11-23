@@ -1,7 +1,7 @@
 import sqlite3
 import bcrypt
 
-DATABASE_FILE = 'databases/user.db'
+DATABASE_FILE = 'user.db'
 
 def create_table():
     conn = sqlite3.connect(DATABASE_FILE)

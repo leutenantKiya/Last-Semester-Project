@@ -36,21 +36,21 @@ def register():
     
     #ini mulai buat otp dl
     # --- Send OTP button ---
-    if st.button("Send Email"):
-        st.session_state.isOtpSent = True
-        st.session_state.otp = "".join([str(random.randint(0, 9)) for _ in range(4)])  # fixed randint upper bound
-        sendOTP(st.session_state.otp,email)
-        st.success(f"OTP sent to your email!")
+    # if st.button("Send Email"):
+    #     st.session_state.isOtpSent = True
+    #     st.session_state.otp = "".join([str(random.randint(0, 9)) for _ in range(4)])  # fixed randint upper bound
+        # sendOTP(st.session_state.otp,email)
+        # st.success(f"OTP sent to your email!")
 
-        st.write(f"Is OTP sent: {st.session_state.isOtpSent}")
-        # st.write(f"Generated OTP (for debug): {st.session_state.otp}")
+        # st.write(f"Is OTP sent: {st.session_state.isOtpSent}")
+        # # st.write(f"Generated OTP (for debug): {st.session_state.otp}")
 
-        otpInput = st.text_input("Enter OTP")
-        if st.button("Check"):
-            if otpInput == st.session_state.otp:
-                st.success("✅ OTP verified successfully!")
-            else:
-                st.error("❌ Incorrect OTP.")
+        # otpInput = st.text_input("Enter OTP")
+        # if st.button("Check"):
+        #     if otpInput == st.session_state.otp:
+        #         st.success("✅ OTP verified successfully!")
+        #     else:
+        #         st.error("❌ Incorrect OTP.")
     password = st.text_input("Password", type="password", key="reg_pass")
     confirm_password = st.text_input("Confirm Password", type="password", key="reg_confirm")
 

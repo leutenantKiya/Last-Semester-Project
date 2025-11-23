@@ -259,49 +259,49 @@ def display_manga_grid():
                 st.rerun()
 
 def main():
-    if st.session_state['username'] == None and st.session_state['logged_in'] == False and st.session_state['page'] == 'login':
-        lg.display_login_page()
-    elif st.session_state['page'] == 'register':
-        print("True")
-        rg.register()
+    # if st.session_state['username'] == None and st.session_state['logged_in'] == False and st.session_state['page'] == 'login':
+    #     lg.display_login_page()
+    # elif st.session_state['page'] == 'register':
+    #     print("True")
+    #     rg.register()
+    # else:
+    st.set_page_config(page_title="Duta Comic", layout="wide")
+    st.markdown("<h1 style='text-align: center; color: red;'>📚 Duta Comic Reader & Downloader</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2>Hi, {st.session_state['username']}</h2>", unsafe_allow_html=True)
+    if 'selected_manga' not in st.session_state:
+        st.session_state.selected_manga = None
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 1
+    if 'current_filter' not in st.session_state:
+        st.session_state.current_filter = None
+    if 'order_by' not in st.session_state:
+        st.session_state.order_by = None
+    if 'chapterlist' not in st.session_state:
+        st.session_state.chapterlist = []
+    if 'chapterlink' not in st.session_state:
+        st.session_state.chapterlink = {}
+    if 'search_active' not in st.session_state:
+        st.session_state.search_active = False 
+    if 'keyword_search' not in st.session_state:
+        st.session_state.keywoard_search = None
+        
+    if 'is_reading' not in st.session_state: 
+        st.session_state.is_reading = False
+    if 'chapter_images' not in st.session_state: 
+        st.session_state.chapter_images = []
+    if 'current_chapter_title' not in st.session_state: 
+        st.session_state.current_chapter_title = ""
+    if 'chapters_limit' not in st.session_state: 
+        st.session_state.chapters_limit = 10
+    if 'read_history' not in st.session_state: 
+        st.session_state['read_history'] = chapterStack.stack()
+        
+    if st.session_state.is_reading:
+        display_reader_mode() 
+    elif st.session_state.selected_manga:
+        getChapters(st.session_state.selected_manga)
     else:
-        st.set_page_config(page_title="Duta Comic", layout="wide")
-        st.markdown("<h1 style='text-align: center; color: red;'>📚 Duta Comic Reader & Downloader</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h2>Hi, {st.session_state['username']}</h2>", unsafe_allow_html=True)
-        if 'selected_manga' not in st.session_state:
-            st.session_state.selected_manga = None
-        if 'current_page' not in st.session_state:
-            st.session_state.current_page = 1
-        if 'current_filter' not in st.session_state:
-            st.session_state.current_filter = None
-        if 'order_by' not in st.session_state:
-            st.session_state.order_by = None
-        if 'chapterlist' not in st.session_state:
-            st.session_state.chapterlist = []
-        if 'chapterlink' not in st.session_state:
-            st.session_state.chapterlink = {}
-        if 'search_active' not in st.session_state:
-            st.session_state.search_active = False 
-        if 'keyword_search' not in st.session_state:
-            st.session_state.keywoard_search = None
-            
-        if 'is_reading' not in st.session_state: 
-            st.session_state.is_reading = False
-        if 'chapter_images' not in st.session_state: 
-            st.session_state.chapter_images = []
-        if 'current_chapter_title' not in st.session_state: 
-            st.session_state.current_chapter_title = ""
-        if 'chapters_limit' not in st.session_state: 
-            st.session_state.chapters_limit = 10
-        if 'read_history' not in st.session_state: 
-            st.session_state['read_history'] = chapterStack.stack()
-            
-        if st.session_state.is_reading:
-            display_reader_mode() 
-        elif st.session_state.selected_manga:
-            getChapters(st.session_state.selected_manga)
-        else:
-            display_manga_grid()
+        display_manga_grid()
 
 if __name__ == "__main__":
     main()
