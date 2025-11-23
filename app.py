@@ -160,11 +160,11 @@ def display_manga_grid():
     current_filter = st.session_state.current_filter
     order_by = st.session_state.order_by
     
-    if st.sidebar.button("Logout", type="primary"):
-        st.session_state['logged_in'] = False
-        st.session_state['username'] = None
-        st.session_state['page'] = 'login'
-        st.rerun()
+    # if st.sidebar.button("Logout", type="primary"):
+    #     st.session_state['logged_in'] = False
+    #     st.session_state['username'] = None
+    #     st.session_state['page'] = 'login'
+    #     st.rerun()
     
     search = st.sidebar.text_input("Pencarian dan Gemini", placeholder="e.g: Beri Aku rekomendasi, deskripsi komik")
     
@@ -224,7 +224,7 @@ def display_manga_grid():
         for i, manga in enumerate(mangas):
             with cols[i % 4]:
                 with st.container(border=True):
-                    st.image(manga["image"], width= "stretch")
+                    st.image(manga["image"], use_container_width=True)
                     st.markdown(
                         f"<p style='text-align: center; font-weight: bold; height: 3em; overflow: hidden;'>"
                         f"{manga['title']}"
