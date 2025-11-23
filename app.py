@@ -224,7 +224,7 @@ def display_manga_grid():
         for i, manga in enumerate(mangas):
             with cols[i % 4]:
                 with st.container(border=True):
-                    st.image(manga["image"], use_container_width=True)
+                    st.image(manga["image"])
                     st.markdown(
                         f"<p style='text-align: center; font-weight: bold; height: 3em; overflow: hidden;'>"
                         f"{manga['title']}"
@@ -266,9 +266,9 @@ def main():
     #     rg.register()
     # else:
     st.set_page_config(page_title="Duta Comic", layout="wide")
-    st.info("This is Only a testing APP. So, you don't need to login before head Happy reading lad")
     st.markdown("<h1 style='text-align: center; color: red;'>📚 Duta Comic Reader & Downloader</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2>Hi, {st.session_state['username']}</h2>", unsafe_allow_html=True)
+    st.info("This is Only a testing APP. So, you don't need to login before head Happy reading lad")
+    st.markdown(f"<h2>Hi, Readers</h2>", unsafe_allow_html=True)
     if 'selected_manga' not in st.session_state:
         st.session_state.selected_manga = None
     if 'current_page' not in st.session_state:
