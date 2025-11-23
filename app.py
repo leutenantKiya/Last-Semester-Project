@@ -11,13 +11,18 @@ import pandas as pd
 from gemini import geminiSearch
 import chapterStack
 import chapterLinkedList as LL
-from login import display_login_page
+import login as lg
+import registration as rg
 
+st.set_page_config(page_title='Duta Comic', layout="centered", page_icon="assets/logo_duta_comic[1].png")
 
-if 'username' not in st.session_state:
-    display_login_page()
-
-st.set_page_config(page_title='Duta Comic', layout="centered")
+def jumpChapter():
+        selected = st.selectbox(
+        st.session_state.current_chapter_title, st.session_state.chapterlist,            
+        index=st.session_state.chapterlist.index(st.session_state.current_chapter_title), label_visibility="collapsed")
+        st.session_state.current_chapter_title = selected
+        st.session_state.chapter_images=scrape_img(st.session_state.chapterlink[st.session_state.current_chapter_title])
+        st.session_state['read_history'].push(st.session_state.current_chapter_title) 
 
 def display_reader_mode():
     with st.sidebar:
@@ -29,20 +34,17 @@ def display_reader_mode():
             st.rerun() 
             
         st.markdown("---")
-    
+    st.markdown(f"<h1 style=''>{st.session_state.selected_manga['title']}</h1>", unsafe_allow_html=True)
+    jumpChapter()
     if not st.session_state.chapter_images:
         st.error("Gagal menampilkan konten. Daftar gambar kosong.")
     else:
         st.info(f"Memuat {len(st.session_state.chapter_images)} halaman.")
-        
-        for i, url in enumerate(st.session_state.chapter_images):
-            # img = url # Variabel 'img' tidak digunakan, bisa dihapus
-            st.image(url, caption=f"Halaman {i+1}")
     
-    # Col1 dan Col2 tidak digunakan di sini, bisa dihapus atau diimplementasikan
-    # col1, col2 = st.columns([1, 2])
-    # di sini nanti buat next sama prev chapter malas
-        
+        for i, url in enumerate(st.session_state.chapter_images):
+            st.image(url, caption=f"Halaman {i+1}", use_container_width=True)
+    jumpChapter()   
+
     
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("⬅️ Kembali ke Daftar Chapter (Bawah)"):
@@ -92,7 +94,8 @@ def getChapters(manga):
             ch_date = ch.select_one("span.chapter-release-date i")
             ch_date = ch_date.get_text(strip=True) if ch_date else ""
             chapters.append({"title": ch_title, "link": ch_link, "date": ch_date}) 
-        
+            st.session_state.chapterlist.append(ch_title)
+            st.session_state.chapterlink.update({ch_title:ch_link})
         col1, col2 = st.columns([1, 2])
         with col1:
             st.image(manga["image"], width=300)
@@ -121,7 +124,7 @@ def getChapters(manga):
                     if st.button("▶️ Baca", key=f"btn_read_{ch['link']}", use_container_width=True):
                         # Panggil scrape_img
                         with st.spinner(f"Mengambil gambar untuk {ch['title']}..."):
-                            image_urls = scrape_img(ch)
+                            image_urls = scrape_img(ch['link'])
                         
                         if image_urls:
                             st.session_state['read_history'].push(ch['title'])
@@ -159,7 +162,8 @@ def display_manga_grid():
     
     if st.sidebar.button("Logout", type="primary"):
         st.session_state['logged_in'] = False
-        display_login_page()
+        st.session_state['username'] = None
+        st.session_state['page'] = 'login'
         st.rerun()
     
     search = st.sidebar.text_input("Pencarian dan Gemini", placeholder="e.g: Beri Aku rekomendasi, deskripsi komik")
@@ -255,40 +259,49 @@ def display_manga_grid():
                 st.rerun()
 
 def main():
-    st.set_page_config(page_title="Duta Comic", layout="wide")
-    st.markdown("<h1 style='text-align: center; color: red;'>📚 Duta Comic Reader & Downloader</h1>", unsafe_allow_html=True)
-    # st.title("📚 Duta Comic Reader & Downloader", )
-    st.markdown(f"<h2>Hi, {st.session_state['username']}</h2>", unsafe_allow_html=True)
-    if 'selected_manga' not in st.session_state:
-        st.session_state.selected_manga = None
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = 1
-    if 'current_filter' not in st.session_state:
-        st.session_state.current_filter = None
-    if 'order_by' not in st.session_state:
-        st.session_state.order_by = None
-    if 'search_active' not in st.session_state:
-        st.session_state.search_active = False 
-    if 'keyword_search' not in st.session_state:
-        st.session_state.keywoard_search = None
-        
-    if 'is_reading' not in st.session_state: 
-        st.session_state.is_reading = False
-    if 'chapter_images' not in st.session_state: 
-        st.session_state.chapter_images = []
-    if 'current_chapter_title' not in st.session_state: 
-        st.session_state.current_chapter_title = ""
-    if 'chapters_limit' not in st.session_state: 
-        st.session_state.chapters_limit = 10
-    if 'read_history' not in st.session_state: 
-        st.session_state['read_history'] = chapterStack.stack()
-        
-    if st.session_state.is_reading:
-        display_reader_mode() 
-    elif st.session_state.selected_manga:
-        getChapters(st.session_state.selected_manga)
+    if st.session_state['username'] == None and st.session_state['logged_in'] == False and st.session_state['page'] == 'login':
+        lg.display_login_page()
+    elif st.session_state['page'] == 'register':
+        print("True")
+        rg.register()
     else:
-        display_manga_grid()
+        st.set_page_config(page_title="Duta Comic", layout="wide")
+        st.markdown("<h1 style='text-align: center; color: red;'>📚 Duta Comic Reader & Downloader</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h2>Hi, {st.session_state['username']}</h2>", unsafe_allow_html=True)
+        if 'selected_manga' not in st.session_state:
+            st.session_state.selected_manga = None
+        if 'current_page' not in st.session_state:
+            st.session_state.current_page = 1
+        if 'current_filter' not in st.session_state:
+            st.session_state.current_filter = None
+        if 'order_by' not in st.session_state:
+            st.session_state.order_by = None
+        if 'chapterlist' not in st.session_state:
+            st.session_state.chapterlist = []
+        if 'chapterlink' not in st.session_state:
+            st.session_state.chapterlink = {}
+        if 'search_active' not in st.session_state:
+            st.session_state.search_active = False 
+        if 'keyword_search' not in st.session_state:
+            st.session_state.keywoard_search = None
+            
+        if 'is_reading' not in st.session_state: 
+            st.session_state.is_reading = False
+        if 'chapter_images' not in st.session_state: 
+            st.session_state.chapter_images = []
+        if 'current_chapter_title' not in st.session_state: 
+            st.session_state.current_chapter_title = ""
+        if 'chapters_limit' not in st.session_state: 
+            st.session_state.chapters_limit = 10
+        if 'read_history' not in st.session_state: 
+            st.session_state['read_history'] = chapterStack.stack()
+            
+        if st.session_state.is_reading:
+            display_reader_mode() 
+        elif st.session_state.selected_manga:
+            getChapters(st.session_state.selected_manga)
+        else:
+            display_manga_grid()
 
 if __name__ == "__main__":
     main()

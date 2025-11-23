@@ -1,7 +1,5 @@
 import streamlit as st
 import script as sc
-from registration import register
-import app 
 
 if 'username' not in st.session_state:
     st.session_state['username'] = None
@@ -11,8 +9,8 @@ if 'page' not in st.session_state:
     st.session_state['page'] = 'login' 
     
 st.set_page_config(
-    page_title="Duta Comic - Login", # Beri judul halaman login
-    page_icon="📚",
+    page_title="Duta Comic - Login",
+    page_icon="Last-Semester-Project/assets/logo_duta_comic[1].png",
     layout="centered"
 )
 
@@ -37,6 +35,7 @@ def display_login_page():
                 is_correct = sc.check_user(username_input, password_input)
                 if is_correct:
                     #change state
+                    st.session_state['page'] = 'app'
                     st.success("Login Berhasil!")
                     st.session_state['logged_in'] = True
                     st.session_state['username'] = username_input
@@ -48,16 +47,9 @@ def display_login_page():
     with register_col:
         st.markdown("Don't have an account?")
         if st.button("Register"):
+            print(st.session_state['page'])
             st.session_state['page'] = 'register'
+            print("setelah",st.session_state['page'])
             st.rerun()
 
 sc.create_table() 
-#login succeeded
-if st.session_state['logged_in']:
-    app.main()
- # if we press register button   
-elif st.session_state['page'] == 'register':
-    register()
-# default 
-else:
-    display_login_page()

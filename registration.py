@@ -1,6 +1,6 @@
 import streamlit as st
 import script as sc 
-from login import display_login_page
+import login as lg
 import resend, random #untuk emailnya
 
 resend.api_key = "re_CiXbj6zf_AN5gCW7WVsatczXWt8NmAFKj"
@@ -11,7 +11,7 @@ def sendOTP(otp:str,email:str):
     "subject": "Resending Email",
     "html": f"<strong>Your otp code is {otp}</strong>"
     }
-    # Send the email
+    # Send the email if email exist
     email_response = resend.Emails.send(params)
     # Print response
     print(email_response)
@@ -22,9 +22,7 @@ if "otp" not in st.session_state:
 if "isOtpSent" not in st.session_state:
     st.session_state.isOtpSent = False
 
-
-
-def register():    
+def register(): 
     st.markdown("""
                 <span>
                 <h1>Make an account -- </h1>
@@ -44,11 +42,9 @@ def register():
         sendOTP(st.session_state.otp,email)
         st.success(f"OTP sent to your email!")
 
-        # --- Display state ---
         st.write(f"Is OTP sent: {st.session_state.isOtpSent}")
         # st.write(f"Generated OTP (for debug): {st.session_state.otp}")
 
-        # --- Check OTP ---
         otpInput = st.text_input("Enter OTP")
         if st.button("Check"):
             if otpInput == st.session_state.otp:
@@ -77,4 +73,4 @@ def register():
 
     if st.button("Login", type="secondary"):
         st.session_state['page'] = 'login'
-        display_login_page()
+        st.rerun()

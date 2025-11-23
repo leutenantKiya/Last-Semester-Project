@@ -1,10 +1,9 @@
 import sqlite3
 import bcrypt
 
-DATABASE_FILE = 'user.db'
+DATABASE_FILE = 'databases/user.db'
 
 def create_table():
-    """Membuat tabel pengguna jika belum ada, DENGAN HASH PASSWORD."""
     conn = sqlite3.connect(DATABASE_FILE)
     cur = conn.cursor()
     # Kita ganti 'password' menjadi 'password_hash' agar aman
