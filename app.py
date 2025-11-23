@@ -224,7 +224,7 @@ def display_manga_grid():
         for i, manga in enumerate(mangas):
             with cols[i % 4]:
                 with st.container(border=True):
-                    st.image(manga["image"])
+                    st.image(manga["image"], width="stretch")
                     st.markdown(
                         f"<p style='text-align: center; font-weight: bold; height: 3em; overflow: hidden;'>"
                         f"{manga['title']}"
