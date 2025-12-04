@@ -36,14 +36,14 @@ def getComicList(filter=None, page=1, order= None):
             for item in soup.select("div.page-item-detail"):
                 title_link_elem = item.select_one("div.item-summary h3.h5 a")
                 img_elem = item.select_one("div.item-thumb a img")
-                print(img_elem, end="\n")
+                # print(img_elem, end="\n")
                 if not (title_link_elem and img_elem):
                     continue
 
                 link = title_link_elem["href"]
                 
                 try:
-                    slug = link.split('/manga/')[1].strip('/')
+                    slug = link.split('/manga/')[-1].strip('/')
                 except IndexError:
                     continue 
                 
@@ -103,6 +103,7 @@ def scrape_img(link, status = True):
 def searchComic(keyword):
     try:
         url = f"{BASE_API}?s={keyword.replace(' ', '+')}&post_type=wp-manga"
+        print(url)
         headers = {"User-Agent": "Mozilla/5.0"}
         resp = requests.get(url, headers=headers, timeout=10)
         if resp.status_code != 200:
@@ -113,17 +114,25 @@ def searchComic(keyword):
         comics = []
 
         results = soup.select("div.c-tabs-item__content")
-        if not results:
-            return []
+        # title_el = item.select_one("h3 a")
+        # print(title_el)
+        # print(results)
+        # if not results:
+        #     return []
         
         for item in results:
             title_el = item.select_one("h3 a")
             img_el = item.select_one("img")
+            img_el = item.select_one("img")
+            # print(title_el)
+            # print(img_el)
 
             if not title_el or not img_el:
                 continue
 
             title_text = title_el.get_text(strip=True)
+            # print(title_text)
+            # print(True)
 
             if keyword.lower() not in title_text.lower():
                 continue
@@ -133,7 +142,7 @@ def searchComic(keyword):
             rating_elem = item.select_one("div.post-total-rating span")
             if not rating_elem:
                 rating_elem = "N/A"
-            
+            print(comics == [])
             rating_text = float(rating_elem.get_text(strip=True) if rating_elem else "N/A")
             comics.append({
                 "title": title_text,
@@ -142,7 +151,8 @@ def searchComic(keyword):
                 "slug": slug,
                 "rating": rating_text
             })
-            print(rating_text)
+            # print(rating_text)
+            print(comics)
         return comics
 
     except Exception as e:
